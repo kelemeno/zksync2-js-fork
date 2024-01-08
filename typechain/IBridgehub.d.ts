@@ -23,130 +23,60 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 
 interface IBridgehubInterface extends ethers.utils.Interface {
   functions: {
-    "acceptAdmin()": FunctionFragment;
-    "acceptGovernor()": FunctionFragment;
-    "deposit(uint256)": FunctionFragment;
-    "executeUpgrade(tuple)": FunctionFragment;
-    "finalizeEthWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])": FunctionFragment;
-    "freezeDiamond()": FunctionFragment;
-    "getChainContract(uint256)": FunctionFragment;
-    "getChainImplementation()": FunctionFragment;
-    "getChainProxyAdmin()": FunctionFragment;
-    "getChainStateTransition(uint256)": FunctionFragment;
-    "getGovernor()": FunctionFragment;
-    "getIsStateTransition(address)": FunctionFragment;
+    "baseToken(uint256)": FunctionFragment;
+    "baseTokenBridge(uint256)": FunctionFragment;
     "getName()": FunctionFragment;
-    "getPriorityTxMaxGasLimit()": FunctionFragment;
-    "getTotaStateTransitions()": FunctionFragment;
-    "getTotalChains()": FunctionFragment;
-    "isEthWithdrawalFinalized(uint256,uint256,uint256)": FunctionFragment;
+    "governor()": FunctionFragment;
     "l2TransactionBaseCost(uint256,uint256,uint256,uint256)": FunctionFragment;
-    "newChain(uint256,address)": FunctionFragment;
+    "newChain(uint256,address,address,address,uint256,address,bytes)": FunctionFragment;
     "newStateTransition(address)": FunctionFragment;
+    "newToken(address)": FunctionFragment;
+    "newTokenBridge(address)": FunctionFragment;
     "proveL1ToL2TransactionStatus(uint256,bytes32,uint256,uint256,uint16,bytes32[],uint8)": FunctionFragment;
     "proveL2LogInclusion(uint256,uint256,uint256,tuple,bytes32[])": FunctionFragment;
     "proveL2MessageInclusion(uint256,uint256,uint256,tuple,bytes32[])": FunctionFragment;
-    "requestL2Transaction(uint256,address,uint256,bytes,uint256,uint256,bytes[],address)": FunctionFragment;
-    "setPendingAdmin(address)": FunctionFragment;
-    "setPendingGovernor(address)": FunctionFragment;
-    "setStateTransitionChainContract(uint256,address)": FunctionFragment;
-    "unfreezeDiamond()": FunctionFragment;
-    "withdrawFunds(uint256,address,uint256)": FunctionFragment;
+    "requestL2Transaction(tuple)": FunctionFragment;
+    "setWethBridge(address)": FunctionFragment;
+    "stateTransition(uint256)": FunctionFragment;
+    "stateTransitionIsRegistered(address)": FunctionFragment;
+    "tokenBridgeIsRegistered(address)": FunctionFragment;
+    "tokenIsRegistered(address)": FunctionFragment;
+    "wethBridge()": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "acceptAdmin",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "acceptGovernor",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "deposit",
+    functionFragment: "baseToken",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "executeUpgrade",
-    values: [
-      {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      }
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "finalizeEthWithdrawal",
-    values: [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BytesLike,
-      BytesLike[]
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "freezeDiamond",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getChainContract",
+    functionFragment: "baseTokenBridge",
     values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getChainImplementation",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getChainProxyAdmin",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getChainStateTransition",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getGovernor",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getIsStateTransition",
-    values: [string]
   ): string;
   encodeFunctionData(functionFragment: "getName", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "getPriorityTxMaxGasLimit",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getTotaStateTransitions",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getTotalChains",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isEthWithdrawalFinalized",
-    values: [BigNumberish, BigNumberish, BigNumberish]
-  ): string;
+  encodeFunctionData(functionFragment: "governor", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "l2TransactionBaseCost",
     values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "newChain",
-    values: [BigNumberish, string]
+    values: [
+      BigNumberish,
+      string,
+      string,
+      string,
+      BigNumberish,
+      string,
+      BytesLike
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "newStateTransition",
+    values: [string]
+  ): string;
+  encodeFunctionData(functionFragment: "newToken", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "newTokenBridge",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -191,99 +121,52 @@ interface IBridgehubInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "requestL2Transaction",
     values: [
-      BigNumberish,
-      string,
-      BigNumberish,
-      BytesLike,
-      BigNumberish,
-      BigNumberish,
-      BytesLike[],
-      string
+      {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      }
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "setPendingAdmin",
+    functionFragment: "setWethBridge",
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "setPendingGovernor",
+    functionFragment: "stateTransition",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "stateTransitionIsRegistered",
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "setStateTransitionChainContract",
-    values: [BigNumberish, string]
+    functionFragment: "tokenBridgeIsRegistered",
+    values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "unfreezeDiamond",
+    functionFragment: "tokenIsRegistered",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "wethBridge",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "withdrawFunds",
-    values: [BigNumberish, string, BigNumberish]
-  ): string;
 
+  decodeFunctionResult(functionFragment: "baseToken", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "acceptAdmin",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "acceptGovernor",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "executeUpgrade",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "finalizeEthWithdrawal",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "freezeDiamond",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getChainContract",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getChainImplementation",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getChainProxyAdmin",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getChainStateTransition",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getGovernor",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getIsStateTransition",
+    functionFragment: "baseTokenBridge",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getName", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "getPriorityTxMaxGasLimit",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getTotaStateTransitions",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getTotalChains",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isEthWithdrawalFinalized",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "governor", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "l2TransactionBaseCost",
     data: BytesLike
@@ -291,6 +174,11 @@ interface IBridgehubInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "newChain", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "newStateTransition",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "newToken", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "newTokenBridge",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -310,45 +198,32 @@ interface IBridgehubInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setPendingAdmin",
+    functionFragment: "setWethBridge",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setPendingGovernor",
+    functionFragment: "stateTransition",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setStateTransitionChainContract",
+    functionFragment: "stateTransitionIsRegistered",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "unfreezeDiamond",
+    functionFragment: "tokenBridgeIsRegistered",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "withdrawFunds",
+    functionFragment: "tokenIsRegistered",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "wethBridge", data: BytesLike): Result;
 
   events: {
-    "ExecuteUpgrade(tuple)": EventFragment;
-    "Freeze()": EventFragment;
-    "NewAdmin(address,address)": EventFragment;
-    "NewChain(uint16,address,address)": EventFragment;
-    "NewGovernor(address,address)": EventFragment;
-    "NewPendingAdmin(address,address)": EventFragment;
-    "NewPendingGovernor(address,address)": EventFragment;
-    "Unfreeze()": EventFragment;
+    "NewChain(uint64,address,address)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "ExecuteUpgrade"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Freeze"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "NewAdmin"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NewChain"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "NewGovernor"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "NewPendingAdmin"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "NewPendingGovernor"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Unfreeze"): EventFragment;
 }
 
 export class IBridgehub extends Contract {
@@ -365,140 +240,32 @@ export class IBridgehub extends Contract {
   interface: IBridgehubInterface;
 
   functions: {
-    acceptAdmin(overrides?: Overrides): Promise<ContractTransaction>;
-
-    "acceptAdmin()"(overrides?: Overrides): Promise<ContractTransaction>;
-
-    acceptGovernor(overrides?: Overrides): Promise<ContractTransaction>;
-
-    "acceptGovernor()"(overrides?: Overrides): Promise<ContractTransaction>;
-
-    deposit(
-      _chainId: BigNumberish,
-      overrides?: PayableOverrides
-    ): Promise<ContractTransaction>;
-
-    "deposit(uint256)"(
-      _chainId: BigNumberish,
-      overrides?: PayableOverrides
-    ): Promise<ContractTransaction>;
-
-    executeUpgrade(
-      _diamondCut: {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      },
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    "executeUpgrade(tuple)"(
-      _diamondCut: {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      },
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    finalizeEthWithdrawal(
-      _chainId: BigNumberish,
-      _l2BlockNumber: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      _message: BytesLike,
-      _merkleProof: BytesLike[],
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    "finalizeEthWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])"(
-      _chainId: BigNumberish,
-      _l2BlockNumber: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      _message: BytesLike,
-      _merkleProof: BytesLike[],
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    freezeDiamond(overrides?: Overrides): Promise<ContractTransaction>;
-
-    "freezeDiamond()"(overrides?: Overrides): Promise<ContractTransaction>;
-
-    getChainContract(
+    baseToken(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
       0: string;
     }>;
 
-    "getChainContract(uint256)"(
+    "baseToken(uint256)"(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
       0: string;
     }>;
 
-    getChainImplementation(overrides?: CallOverrides): Promise<{
-      0: string;
-    }>;
-
-    "getChainImplementation()"(overrides?: CallOverrides): Promise<{
-      0: string;
-    }>;
-
-    getChainProxyAdmin(overrides?: CallOverrides): Promise<{
-      0: string;
-    }>;
-
-    "getChainProxyAdmin()"(overrides?: CallOverrides): Promise<{
-      0: string;
-    }>;
-
-    getChainStateTransition(
+    baseTokenBridge(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
       0: string;
     }>;
 
-    "getChainStateTransition(uint256)"(
+    "baseTokenBridge(uint256)"(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
       0: string;
-    }>;
-
-    getGovernor(overrides?: CallOverrides): Promise<{
-      0: string;
-    }>;
-
-    "getGovernor()"(overrides?: CallOverrides): Promise<{
-      0: string;
-    }>;
-
-    getIsStateTransition(
-      _stateTransition: string,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: boolean;
-    }>;
-
-    "getIsStateTransition(address)"(
-      _stateTransition: string,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: boolean;
     }>;
 
     getName(overrides?: CallOverrides): Promise<{
@@ -509,46 +276,12 @@ export class IBridgehub extends Contract {
       0: string;
     }>;
 
-    getPriorityTxMaxGasLimit(overrides?: CallOverrides): Promise<{
-      0: BigNumber;
+    governor(overrides?: CallOverrides): Promise<{
+      0: string;
     }>;
 
-    "getPriorityTxMaxGasLimit()"(overrides?: CallOverrides): Promise<{
-      0: BigNumber;
-    }>;
-
-    getTotaStateTransitions(overrides?: CallOverrides): Promise<{
-      0: BigNumber;
-    }>;
-
-    "getTotaStateTransitions()"(overrides?: CallOverrides): Promise<{
-      0: BigNumber;
-    }>;
-
-    getTotalChains(overrides?: CallOverrides): Promise<{
-      0: BigNumber;
-    }>;
-
-    "getTotalChains()"(overrides?: CallOverrides): Promise<{
-      0: BigNumber;
-    }>;
-
-    isEthWithdrawalFinalized(
-      _chainId: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: boolean;
-    }>;
-
-    "isEthWithdrawalFinalized(uint256,uint256,uint256)"(
-      _chainId: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: boolean;
+    "governor()"(overrides?: CallOverrides): Promise<{
+      0: string;
     }>;
 
     l2TransactionBaseCost(
@@ -574,12 +307,22 @@ export class IBridgehub extends Contract {
     newChain(
       _chainId: BigNumberish,
       _stateTransition: string,
+      _baseToken: string,
+      _baseTokenBridge: string,
+      _salt: BigNumberish,
+      _governor: string,
+      _initData: BytesLike,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "newChain(uint256,address)"(
+    "newChain(uint256,address,address,address,uint256,address,bytes)"(
       _chainId: BigNumberish,
       _stateTransition: string,
+      _baseToken: string,
+      _baseTokenBridge: string,
+      _salt: BigNumberish,
+      _governor: string,
+      _initData: BytesLike,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
@@ -593,12 +336,32 @@ export class IBridgehub extends Contract {
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
+    newToken(
+      _token: string,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "newToken(address)"(
+      _token: string,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    newTokenBridge(
+      _tokenBridge: string,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "newTokenBridge(address)"(
+      _tokenBridge: string,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
     proveL1ToL2TransactionStatus(
       _chainId: BigNumberish,
       _l2TxHash: BytesLike,
-      _l2BlockNumber: BigNumberish,
+      _l2BatchNumber: BigNumberish,
       _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
+      _l2TxNumberInBatch: BigNumberish,
       _merkleProof: BytesLike[],
       _status: BigNumberish,
       overrides?: CallOverrides
@@ -609,9 +372,9 @@ export class IBridgehub extends Contract {
     "proveL1ToL2TransactionStatus(uint256,bytes32,uint256,uint256,uint16,bytes32[],uint8)"(
       _chainId: BigNumberish,
       _l2TxHash: BytesLike,
-      _l2BlockNumber: BigNumberish,
+      _l2BatchNumber: BigNumberish,
       _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
+      _l2TxNumberInBatch: BigNumberish,
       _merkleProof: BytesLike[],
       _status: BigNumberish,
       overrides?: CallOverrides
@@ -637,7 +400,7 @@ export class IBridgehub extends Contract {
       0: boolean;
     }>;
 
-    "proveL2LogInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+    "proveL2LogInclusion(uint256,uint256,uint256,(uint8,bool,uint16,address,bytes32,bytes32),bytes32[])"(
       _chainId: BigNumberish,
       _batchNumber: BigNumberish,
       _index: BigNumberish,
@@ -670,7 +433,7 @@ export class IBridgehub extends Contract {
       0: boolean;
     }>;
 
-    "proveL2MessageInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+    "proveL2MessageInclusion(uint256,uint256,uint256,(uint16,address,bytes),bytes32[])"(
       _chainId: BigNumberish,
       _batchNumber: BigNumberish,
       _index: BigNumberish,
@@ -686,221 +449,136 @@ export class IBridgehub extends Contract {
     }>;
 
     requestL2Transaction(
-      _chainId: BigNumberish,
-      _contractL2: string,
-      _l2Value: BigNumberish,
-      _calldata: BytesLike,
-      _l2GasLimit: BigNumberish,
-      _l2GasPerPubdataByteLimit: BigNumberish,
-      _factoryDeps: BytesLike[],
-      _refundRecipient: string,
+      _request: {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      },
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
 
-    "requestL2Transaction(uint256,address,uint256,bytes,uint256,uint256,bytes[],address)"(
-      _chainId: BigNumberish,
-      _contractL2: string,
-      _l2Value: BigNumberish,
-      _calldata: BytesLike,
-      _l2GasLimit: BigNumberish,
-      _l2GasPerPubdataByteLimit: BigNumberish,
-      _factoryDeps: BytesLike[],
-      _refundRecipient: string,
+    "requestL2Transaction((uint256,address,address,uint256,uint256,bytes,uint256,uint256,bytes[],address))"(
+      _request: {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      },
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
 
-    setPendingAdmin(
-      _newPendingAdmin: string,
+    setWethBridge(
+      _wethBridge: string,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "setPendingAdmin(address)"(
-      _newPendingAdmin: string,
+    "setWethBridge(address)"(
+      _wethBridge: string,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    setPendingGovernor(
-      _newPendingGovernor: string,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    "setPendingGovernor(address)"(
-      _newPendingGovernor: string,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    setStateTransitionChainContract(
+    stateTransition(
       _chainId: BigNumberish,
-      _stateTransitionChainContract: string,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
+      overrides?: CallOverrides
+    ): Promise<{
+      0: string;
+    }>;
 
-    "setStateTransitionChainContract(uint256,address)"(
+    "stateTransition(uint256)"(
       _chainId: BigNumberish,
-      _stateTransitionChainContract: string,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
+      overrides?: CallOverrides
+    ): Promise<{
+      0: string;
+    }>;
 
-    unfreezeDiamond(overrides?: Overrides): Promise<ContractTransaction>;
+    stateTransitionIsRegistered(
+      _stateTransition: string,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: boolean;
+    }>;
 
-    "unfreezeDiamond()"(overrides?: Overrides): Promise<ContractTransaction>;
+    "stateTransitionIsRegistered(address)"(
+      _stateTransition: string,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: boolean;
+    }>;
 
-    withdrawFunds(
-      _chainId: BigNumberish,
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
+    tokenBridgeIsRegistered(
+      _baseTokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: boolean;
+    }>;
 
-    "withdrawFunds(uint256,address,uint256)"(
-      _chainId: BigNumberish,
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
+    "tokenBridgeIsRegistered(address)"(
+      _baseTokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: boolean;
+    }>;
+
+    tokenIsRegistered(
+      _baseToken: string,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: boolean;
+    }>;
+
+    "tokenIsRegistered(address)"(
+      _baseToken: string,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: boolean;
+    }>;
+
+    wethBridge(overrides?: CallOverrides): Promise<{
+      0: string;
+    }>;
+
+    "wethBridge()"(overrides?: CallOverrides): Promise<{
+      0: string;
+    }>;
   };
 
-  acceptAdmin(overrides?: Overrides): Promise<ContractTransaction>;
+  baseToken(_chainId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-  "acceptAdmin()"(overrides?: Overrides): Promise<ContractTransaction>;
-
-  acceptGovernor(overrides?: Overrides): Promise<ContractTransaction>;
-
-  "acceptGovernor()"(overrides?: Overrides): Promise<ContractTransaction>;
-
-  deposit(
-    _chainId: BigNumberish,
-    overrides?: PayableOverrides
-  ): Promise<ContractTransaction>;
-
-  "deposit(uint256)"(
-    _chainId: BigNumberish,
-    overrides?: PayableOverrides
-  ): Promise<ContractTransaction>;
-
-  executeUpgrade(
-    _diamondCut: {
-      facetCuts: {
-        facet: string;
-        action: BigNumberish;
-        isFreezable: boolean;
-        selectors: BytesLike[];
-      }[];
-      initAddress: string;
-      initCalldata: BytesLike;
-    },
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  "executeUpgrade(tuple)"(
-    _diamondCut: {
-      facetCuts: {
-        facet: string;
-        action: BigNumberish;
-        isFreezable: boolean;
-        selectors: BytesLike[];
-      }[];
-      initAddress: string;
-      initCalldata: BytesLike;
-    },
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  finalizeEthWithdrawal(
-    _chainId: BigNumberish,
-    _l2BlockNumber: BigNumberish,
-    _l2MessageIndex: BigNumberish,
-    _l2TxNumberInBlock: BigNumberish,
-    _message: BytesLike,
-    _merkleProof: BytesLike[],
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  "finalizeEthWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])"(
-    _chainId: BigNumberish,
-    _l2BlockNumber: BigNumberish,
-    _l2MessageIndex: BigNumberish,
-    _l2TxNumberInBlock: BigNumberish,
-    _message: BytesLike,
-    _merkleProof: BytesLike[],
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  freezeDiamond(overrides?: Overrides): Promise<ContractTransaction>;
-
-  "freezeDiamond()"(overrides?: Overrides): Promise<ContractTransaction>;
-
-  getChainContract(
+  "baseToken(uint256)"(
     _chainId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
 
-  "getChainContract(uint256)"(
+  baseTokenBridge(
     _chainId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
 
-  getChainImplementation(overrides?: CallOverrides): Promise<string>;
-
-  "getChainImplementation()"(overrides?: CallOverrides): Promise<string>;
-
-  getChainProxyAdmin(overrides?: CallOverrides): Promise<string>;
-
-  "getChainProxyAdmin()"(overrides?: CallOverrides): Promise<string>;
-
-  getChainStateTransition(
+  "baseTokenBridge(uint256)"(
     _chainId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
-
-  "getChainStateTransition(uint256)"(
-    _chainId: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  getGovernor(overrides?: CallOverrides): Promise<string>;
-
-  "getGovernor()"(overrides?: CallOverrides): Promise<string>;
-
-  getIsStateTransition(
-    _stateTransition: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "getIsStateTransition(address)"(
-    _stateTransition: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
 
   getName(overrides?: CallOverrides): Promise<string>;
 
   "getName()"(overrides?: CallOverrides): Promise<string>;
 
-  getPriorityTxMaxGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
+  governor(overrides?: CallOverrides): Promise<string>;
 
-  "getPriorityTxMaxGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-  getTotaStateTransitions(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "getTotaStateTransitions()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-  getTotalChains(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "getTotalChains()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-  isEthWithdrawalFinalized(
-    _chainId: BigNumberish,
-    _l2MessageIndex: BigNumberish,
-    _l2TxNumberInBlock: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "isEthWithdrawalFinalized(uint256,uint256,uint256)"(
-    _chainId: BigNumberish,
-    _l2MessageIndex: BigNumberish,
-    _l2TxNumberInBlock: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  "governor()"(overrides?: CallOverrides): Promise<string>;
 
   l2TransactionBaseCost(
     _chainId: BigNumberish,
@@ -921,12 +599,22 @@ export class IBridgehub extends Contract {
   newChain(
     _chainId: BigNumberish,
     _stateTransition: string,
+    _baseToken: string,
+    _baseTokenBridge: string,
+    _salt: BigNumberish,
+    _governor: string,
+    _initData: BytesLike,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "newChain(uint256,address)"(
+  "newChain(uint256,address,address,address,uint256,address,bytes)"(
     _chainId: BigNumberish,
     _stateTransition: string,
+    _baseToken: string,
+    _baseTokenBridge: string,
+    _salt: BigNumberish,
+    _governor: string,
+    _initData: BytesLike,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
@@ -940,12 +628,29 @@ export class IBridgehub extends Contract {
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
+  newToken(_token: string, overrides?: Overrides): Promise<ContractTransaction>;
+
+  "newToken(address)"(
+    _token: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  newTokenBridge(
+    _tokenBridge: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "newTokenBridge(address)"(
+    _tokenBridge: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
   proveL1ToL2TransactionStatus(
     _chainId: BigNumberish,
     _l2TxHash: BytesLike,
-    _l2BlockNumber: BigNumberish,
+    _l2BatchNumber: BigNumberish,
     _l2MessageIndex: BigNumberish,
-    _l2TxNumberInBlock: BigNumberish,
+    _l2TxNumberInBatch: BigNumberish,
     _merkleProof: BytesLike[],
     _status: BigNumberish,
     overrides?: CallOverrides
@@ -954,9 +659,9 @@ export class IBridgehub extends Contract {
   "proveL1ToL2TransactionStatus(uint256,bytes32,uint256,uint256,uint16,bytes32[],uint8)"(
     _chainId: BigNumberish,
     _l2TxHash: BytesLike,
-    _l2BlockNumber: BigNumberish,
+    _l2BatchNumber: BigNumberish,
     _l2MessageIndex: BigNumberish,
-    _l2TxNumberInBlock: BigNumberish,
+    _l2TxNumberInBatch: BigNumberish,
     _merkleProof: BytesLike[],
     _status: BigNumberish,
     overrides?: CallOverrides
@@ -978,7 +683,7 @@ export class IBridgehub extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  "proveL2LogInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+  "proveL2LogInclusion(uint256,uint256,uint256,(uint8,bool,uint16,address,bytes32,bytes32),bytes32[])"(
     _chainId: BigNumberish,
     _batchNumber: BigNumberish,
     _index: BigNumberish,
@@ -1007,7 +712,7 @@ export class IBridgehub extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  "proveL2MessageInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+  "proveL2MessageInclusion(uint256,uint256,uint256,(uint16,address,bytes),bytes32[])"(
     _chainId: BigNumberish,
     _batchNumber: BigNumberish,
     _index: BigNumberish,
@@ -1021,218 +726,119 @@ export class IBridgehub extends Contract {
   ): Promise<boolean>;
 
   requestL2Transaction(
-    _chainId: BigNumberish,
-    _contractL2: string,
-    _l2Value: BigNumberish,
-    _calldata: BytesLike,
-    _l2GasLimit: BigNumberish,
-    _l2GasPerPubdataByteLimit: BigNumberish,
-    _factoryDeps: BytesLike[],
-    _refundRecipient: string,
+    _request: {
+      chainId: BigNumberish;
+      payer: string;
+      l2Contract: string;
+      mintValue: BigNumberish;
+      l2Value: BigNumberish;
+      l2Calldata: BytesLike;
+      l2GasLimit: BigNumberish;
+      l2GasPerPubdataByteLimit: BigNumberish;
+      factoryDeps: BytesLike[];
+      refundRecipient: string;
+    },
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
 
-  "requestL2Transaction(uint256,address,uint256,bytes,uint256,uint256,bytes[],address)"(
-    _chainId: BigNumberish,
-    _contractL2: string,
-    _l2Value: BigNumberish,
-    _calldata: BytesLike,
-    _l2GasLimit: BigNumberish,
-    _l2GasPerPubdataByteLimit: BigNumberish,
-    _factoryDeps: BytesLike[],
-    _refundRecipient: string,
+  "requestL2Transaction((uint256,address,address,uint256,uint256,bytes,uint256,uint256,bytes[],address))"(
+    _request: {
+      chainId: BigNumberish;
+      payer: string;
+      l2Contract: string;
+      mintValue: BigNumberish;
+      l2Value: BigNumberish;
+      l2Calldata: BytesLike;
+      l2GasLimit: BigNumberish;
+      l2GasPerPubdataByteLimit: BigNumberish;
+      factoryDeps: BytesLike[];
+      refundRecipient: string;
+    },
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
 
-  setPendingAdmin(
-    _newPendingAdmin: string,
+  setWethBridge(
+    _wethBridge: string,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "setPendingAdmin(address)"(
-    _newPendingAdmin: string,
+  "setWethBridge(address)"(
+    _wethBridge: string,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  setPendingGovernor(
-    _newPendingGovernor: string,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  "setPendingGovernor(address)"(
-    _newPendingGovernor: string,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  setStateTransitionChainContract(
+  stateTransition(
     _chainId: BigNumberish,
-    _stateTransitionChainContract: string,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
+    overrides?: CallOverrides
+  ): Promise<string>;
 
-  "setStateTransitionChainContract(uint256,address)"(
+  "stateTransition(uint256)"(
     _chainId: BigNumberish,
-    _stateTransitionChainContract: string,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
+    overrides?: CallOverrides
+  ): Promise<string>;
 
-  unfreezeDiamond(overrides?: Overrides): Promise<ContractTransaction>;
+  stateTransitionIsRegistered(
+    _stateTransition: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
-  "unfreezeDiamond()"(overrides?: Overrides): Promise<ContractTransaction>;
+  "stateTransitionIsRegistered(address)"(
+    _stateTransition: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
-  withdrawFunds(
-    _chainId: BigNumberish,
-    _to: string,
-    _amount: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
+  tokenBridgeIsRegistered(
+    _baseTokenBridge: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
-  "withdrawFunds(uint256,address,uint256)"(
-    _chainId: BigNumberish,
-    _to: string,
-    _amount: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
+  "tokenBridgeIsRegistered(address)"(
+    _baseTokenBridge: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  tokenIsRegistered(
+    _baseToken: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  "tokenIsRegistered(address)"(
+    _baseToken: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  wethBridge(overrides?: CallOverrides): Promise<string>;
+
+  "wethBridge()"(overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
-    acceptAdmin(overrides?: CallOverrides): Promise<void>;
-
-    "acceptAdmin()"(overrides?: CallOverrides): Promise<void>;
-
-    acceptGovernor(overrides?: CallOverrides): Promise<void>;
-
-    "acceptGovernor()"(overrides?: CallOverrides): Promise<void>;
-
-    deposit(_chainId: BigNumberish, overrides?: CallOverrides): Promise<void>;
-
-    "deposit(uint256)"(
-      _chainId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    executeUpgrade(
-      _diamondCut: {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      },
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "executeUpgrade(tuple)"(
-      _diamondCut: {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      },
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    finalizeEthWithdrawal(
-      _chainId: BigNumberish,
-      _l2BlockNumber: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      _message: BytesLike,
-      _merkleProof: BytesLike[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "finalizeEthWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])"(
-      _chainId: BigNumberish,
-      _l2BlockNumber: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      _message: BytesLike,
-      _merkleProof: BytesLike[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    freezeDiamond(overrides?: CallOverrides): Promise<void>;
-
-    "freezeDiamond()"(overrides?: CallOverrides): Promise<void>;
-
-    getChainContract(
+    baseToken(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
-    "getChainContract(uint256)"(
+    "baseToken(uint256)"(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
-    getChainImplementation(overrides?: CallOverrides): Promise<string>;
-
-    "getChainImplementation()"(overrides?: CallOverrides): Promise<string>;
-
-    getChainProxyAdmin(overrides?: CallOverrides): Promise<string>;
-
-    "getChainProxyAdmin()"(overrides?: CallOverrides): Promise<string>;
-
-    getChainStateTransition(
+    baseTokenBridge(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
-    "getChainStateTransition(uint256)"(
+    "baseTokenBridge(uint256)"(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
-
-    getGovernor(overrides?: CallOverrides): Promise<string>;
-
-    "getGovernor()"(overrides?: CallOverrides): Promise<string>;
-
-    getIsStateTransition(
-      _stateTransition: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "getIsStateTransition(address)"(
-      _stateTransition: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
 
     getName(overrides?: CallOverrides): Promise<string>;
 
     "getName()"(overrides?: CallOverrides): Promise<string>;
 
-    getPriorityTxMaxGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
+    governor(overrides?: CallOverrides): Promise<string>;
 
-    "getPriorityTxMaxGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getTotaStateTransitions(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "getTotaStateTransitions()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getTotalChains(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "getTotalChains()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    isEthWithdrawalFinalized(
-      _chainId: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "isEthWithdrawalFinalized(uint256,uint256,uint256)"(
-      _chainId: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    "governor()"(overrides?: CallOverrides): Promise<string>;
 
     l2TransactionBaseCost(
       _chainId: BigNumberish,
@@ -1253,12 +859,22 @@ export class IBridgehub extends Contract {
     newChain(
       _chainId: BigNumberish,
       _stateTransition: string,
+      _baseToken: string,
+      _baseTokenBridge: string,
+      _salt: BigNumberish,
+      _governor: string,
+      _initData: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "newChain(uint256,address)"(
+    "newChain(uint256,address,address,address,uint256,address,bytes)"(
       _chainId: BigNumberish,
       _stateTransition: string,
+      _baseToken: string,
+      _baseTokenBridge: string,
+      _salt: BigNumberish,
+      _governor: string,
+      _initData: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1272,12 +888,29 @@ export class IBridgehub extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    newToken(_token: string, overrides?: CallOverrides): Promise<void>;
+
+    "newToken(address)"(
+      _token: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    newTokenBridge(
+      _tokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "newTokenBridge(address)"(
+      _tokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     proveL1ToL2TransactionStatus(
       _chainId: BigNumberish,
       _l2TxHash: BytesLike,
-      _l2BlockNumber: BigNumberish,
+      _l2BatchNumber: BigNumberish,
       _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
+      _l2TxNumberInBatch: BigNumberish,
       _merkleProof: BytesLike[],
       _status: BigNumberish,
       overrides?: CallOverrides
@@ -1286,9 +919,9 @@ export class IBridgehub extends Contract {
     "proveL1ToL2TransactionStatus(uint256,bytes32,uint256,uint256,uint16,bytes32[],uint8)"(
       _chainId: BigNumberish,
       _l2TxHash: BytesLike,
-      _l2BlockNumber: BigNumberish,
+      _l2BatchNumber: BigNumberish,
       _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
+      _l2TxNumberInBatch: BigNumberish,
       _merkleProof: BytesLike[],
       _status: BigNumberish,
       overrides?: CallOverrides
@@ -1310,7 +943,7 @@ export class IBridgehub extends Contract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    "proveL2LogInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+    "proveL2LogInclusion(uint256,uint256,uint256,(uint8,bool,uint16,address,bytes32,bytes32),bytes32[])"(
       _chainId: BigNumberish,
       _batchNumber: BigNumberish,
       _index: BigNumberish,
@@ -1339,7 +972,7 @@ export class IBridgehub extends Contract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    "proveL2MessageInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+    "proveL2MessageInclusion(uint256,uint256,uint256,(uint16,address,bytes),bytes32[])"(
       _chainId: BigNumberish,
       _batchNumber: BigNumberish,
       _index: BigNumberish,
@@ -1353,221 +986,118 @@ export class IBridgehub extends Contract {
     ): Promise<boolean>;
 
     requestL2Transaction(
-      _chainId: BigNumberish,
-      _contractL2: string,
-      _l2Value: BigNumberish,
-      _calldata: BytesLike,
-      _l2GasLimit: BigNumberish,
-      _l2GasPerPubdataByteLimit: BigNumberish,
-      _factoryDeps: BytesLike[],
-      _refundRecipient: string,
+      _request: {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      },
       overrides?: CallOverrides
     ): Promise<string>;
 
-    "requestL2Transaction(uint256,address,uint256,bytes,uint256,uint256,bytes[],address)"(
-      _chainId: BigNumberish,
-      _contractL2: string,
-      _l2Value: BigNumberish,
-      _calldata: BytesLike,
-      _l2GasLimit: BigNumberish,
-      _l2GasPerPubdataByteLimit: BigNumberish,
-      _factoryDeps: BytesLike[],
-      _refundRecipient: string,
+    "requestL2Transaction((uint256,address,address,uint256,uint256,bytes,uint256,uint256,bytes[],address))"(
+      _request: {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      },
       overrides?: CallOverrides
     ): Promise<string>;
 
-    setPendingAdmin(
-      _newPendingAdmin: string,
+    setWethBridge(
+      _wethBridge: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "setPendingAdmin(address)"(
-      _newPendingAdmin: string,
+    "setWethBridge(address)"(
+      _wethBridge: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setPendingGovernor(
-      _newPendingGovernor: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "setPendingGovernor(address)"(
-      _newPendingGovernor: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setStateTransitionChainContract(
+    stateTransition(
       _chainId: BigNumberish,
-      _stateTransitionChainContract: string,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<string>;
 
-    "setStateTransitionChainContract(uint256,address)"(
+    "stateTransition(uint256)"(
       _chainId: BigNumberish,
-      _stateTransitionChainContract: string,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<string>;
 
-    unfreezeDiamond(overrides?: CallOverrides): Promise<void>;
-
-    "unfreezeDiamond()"(overrides?: CallOverrides): Promise<void>;
-
-    withdrawFunds(
-      _chainId: BigNumberish,
-      _to: string,
-      _amount: BigNumberish,
+    stateTransitionIsRegistered(
+      _stateTransition: string,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<boolean>;
 
-    "withdrawFunds(uint256,address,uint256)"(
-      _chainId: BigNumberish,
-      _to: string,
-      _amount: BigNumberish,
+    "stateTransitionIsRegistered(address)"(
+      _stateTransition: string,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<boolean>;
+
+    tokenBridgeIsRegistered(
+      _baseTokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    "tokenBridgeIsRegistered(address)"(
+      _baseTokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    tokenIsRegistered(
+      _baseToken: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    "tokenIsRegistered(address)"(
+      _baseToken: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    wethBridge(overrides?: CallOverrides): Promise<string>;
+
+    "wethBridge()"(overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {
-    ExecuteUpgrade(diamondCut: null): EventFilter;
-
-    Freeze(): EventFilter;
-
-    NewAdmin(oldAdmin: string | null, newAdmin: string | null): EventFilter;
-
     NewChain(
       chainId: BigNumberish | null,
       stateTransition: null,
       chainGovernance: string | null
     ): EventFilter;
-
-    NewGovernor(
-      oldGovernor: string | null,
-      newGovernor: string | null
-    ): EventFilter;
-
-    NewPendingAdmin(
-      oldPendingAdmin: string | null,
-      newPendingAdmin: string | null
-    ): EventFilter;
-
-    NewPendingGovernor(
-      oldPendingGovernor: string | null,
-      newPendingGovernor: string | null
-    ): EventFilter;
-
-    Unfreeze(): EventFilter;
   };
 
   estimateGas: {
-    acceptAdmin(overrides?: Overrides): Promise<BigNumber>;
-
-    "acceptAdmin()"(overrides?: Overrides): Promise<BigNumber>;
-
-    acceptGovernor(overrides?: Overrides): Promise<BigNumber>;
-
-    "acceptGovernor()"(overrides?: Overrides): Promise<BigNumber>;
-
-    deposit(
-      _chainId: BigNumberish,
-      overrides?: PayableOverrides
-    ): Promise<BigNumber>;
-
-    "deposit(uint256)"(
-      _chainId: BigNumberish,
-      overrides?: PayableOverrides
-    ): Promise<BigNumber>;
-
-    executeUpgrade(
-      _diamondCut: {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      },
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    "executeUpgrade(tuple)"(
-      _diamondCut: {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      },
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    finalizeEthWithdrawal(
-      _chainId: BigNumberish,
-      _l2BlockNumber: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      _message: BytesLike,
-      _merkleProof: BytesLike[],
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    "finalizeEthWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])"(
-      _chainId: BigNumberish,
-      _l2BlockNumber: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      _message: BytesLike,
-      _merkleProof: BytesLike[],
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    freezeDiamond(overrides?: Overrides): Promise<BigNumber>;
-
-    "freezeDiamond()"(overrides?: Overrides): Promise<BigNumber>;
-
-    getChainContract(
+    baseToken(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "getChainContract(uint256)"(
+    "baseToken(uint256)"(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getChainImplementation(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "getChainImplementation()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getChainProxyAdmin(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "getChainProxyAdmin()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getChainStateTransition(
+    baseTokenBridge(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "getChainStateTransition(uint256)"(
+    "baseTokenBridge(uint256)"(
       _chainId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getGovernor(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "getGovernor()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getIsStateTransition(
-      _stateTransition: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "getIsStateTransition(address)"(
-      _stateTransition: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1575,31 +1105,9 @@ export class IBridgehub extends Contract {
 
     "getName()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getPriorityTxMaxGasLimit(overrides?: CallOverrides): Promise<BigNumber>;
+    governor(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "getPriorityTxMaxGasLimit()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getTotaStateTransitions(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "getTotaStateTransitions()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getTotalChains(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "getTotalChains()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    isEthWithdrawalFinalized(
-      _chainId: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "isEthWithdrawalFinalized(uint256,uint256,uint256)"(
-      _chainId: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    "governor()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     l2TransactionBaseCost(
       _chainId: BigNumberish,
@@ -1620,12 +1128,22 @@ export class IBridgehub extends Contract {
     newChain(
       _chainId: BigNumberish,
       _stateTransition: string,
+      _baseToken: string,
+      _baseTokenBridge: string,
+      _salt: BigNumberish,
+      _governor: string,
+      _initData: BytesLike,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "newChain(uint256,address)"(
+    "newChain(uint256,address,address,address,uint256,address,bytes)"(
       _chainId: BigNumberish,
       _stateTransition: string,
+      _baseToken: string,
+      _baseTokenBridge: string,
+      _salt: BigNumberish,
+      _governor: string,
+      _initData: BytesLike,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
@@ -1639,12 +1157,29 @@ export class IBridgehub extends Contract {
       overrides?: Overrides
     ): Promise<BigNumber>;
 
+    newToken(_token: string, overrides?: Overrides): Promise<BigNumber>;
+
+    "newToken(address)"(
+      _token: string,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    newTokenBridge(
+      _tokenBridge: string,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    "newTokenBridge(address)"(
+      _tokenBridge: string,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
     proveL1ToL2TransactionStatus(
       _chainId: BigNumberish,
       _l2TxHash: BytesLike,
-      _l2BlockNumber: BigNumberish,
+      _l2BatchNumber: BigNumberish,
       _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
+      _l2TxNumberInBatch: BigNumberish,
       _merkleProof: BytesLike[],
       _status: BigNumberish,
       overrides?: CallOverrides
@@ -1653,9 +1188,9 @@ export class IBridgehub extends Contract {
     "proveL1ToL2TransactionStatus(uint256,bytes32,uint256,uint256,uint16,bytes32[],uint8)"(
       _chainId: BigNumberish,
       _l2TxHash: BytesLike,
-      _l2BlockNumber: BigNumberish,
+      _l2BatchNumber: BigNumberish,
       _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
+      _l2TxNumberInBatch: BigNumberish,
       _merkleProof: BytesLike[],
       _status: BigNumberish,
       overrides?: CallOverrides
@@ -1677,7 +1212,7 @@ export class IBridgehub extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "proveL2LogInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+    "proveL2LogInclusion(uint256,uint256,uint256,(uint8,bool,uint16,address,bytes32,bytes32),bytes32[])"(
       _chainId: BigNumberish,
       _batchNumber: BigNumberish,
       _index: BigNumberish,
@@ -1706,7 +1241,7 @@ export class IBridgehub extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "proveL2MessageInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+    "proveL2MessageInclusion(uint256,uint256,uint256,(uint16,address,bytes),bytes32[])"(
       _chainId: BigNumberish,
       _batchNumber: BigNumberish,
       _index: BigNumberish,
@@ -1720,198 +1255,110 @@ export class IBridgehub extends Contract {
     ): Promise<BigNumber>;
 
     requestL2Transaction(
-      _chainId: BigNumberish,
-      _contractL2: string,
-      _l2Value: BigNumberish,
-      _calldata: BytesLike,
-      _l2GasLimit: BigNumberish,
-      _l2GasPerPubdataByteLimit: BigNumberish,
-      _factoryDeps: BytesLike[],
-      _refundRecipient: string,
+      _request: {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      },
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
 
-    "requestL2Transaction(uint256,address,uint256,bytes,uint256,uint256,bytes[],address)"(
-      _chainId: BigNumberish,
-      _contractL2: string,
-      _l2Value: BigNumberish,
-      _calldata: BytesLike,
-      _l2GasLimit: BigNumberish,
-      _l2GasPerPubdataByteLimit: BigNumberish,
-      _factoryDeps: BytesLike[],
-      _refundRecipient: string,
+    "requestL2Transaction((uint256,address,address,uint256,uint256,bytes,uint256,uint256,bytes[],address))"(
+      _request: {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      },
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
 
-    setPendingAdmin(
-      _newPendingAdmin: string,
+    setWethBridge(
+      _wethBridge: string,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "setPendingAdmin(address)"(
-      _newPendingAdmin: string,
+    "setWethBridge(address)"(
+      _wethBridge: string,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    setPendingGovernor(
-      _newPendingGovernor: string,
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    "setPendingGovernor(address)"(
-      _newPendingGovernor: string,
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    setStateTransitionChainContract(
+    stateTransition(
       _chainId: BigNumberish,
-      _stateTransitionChainContract: string,
-      overrides?: Overrides
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "setStateTransitionChainContract(uint256,address)"(
+    "stateTransition(uint256)"(
       _chainId: BigNumberish,
-      _stateTransitionChainContract: string,
-      overrides?: Overrides
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    unfreezeDiamond(overrides?: Overrides): Promise<BigNumber>;
-
-    "unfreezeDiamond()"(overrides?: Overrides): Promise<BigNumber>;
-
-    withdrawFunds(
-      _chainId: BigNumberish,
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides
+    stateTransitionIsRegistered(
+      _stateTransition: string,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "withdrawFunds(uint256,address,uint256)"(
-      _chainId: BigNumberish,
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides
+    "stateTransitionIsRegistered(address)"(
+      _stateTransition: string,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    tokenBridgeIsRegistered(
+      _baseTokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "tokenBridgeIsRegistered(address)"(
+      _baseTokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    tokenIsRegistered(
+      _baseToken: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "tokenIsRegistered(address)"(
+      _baseToken: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    wethBridge(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "wethBridge()"(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    acceptAdmin(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    "acceptAdmin()"(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    acceptGovernor(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    "acceptGovernor()"(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    deposit(
-      _chainId: BigNumberish,
-      overrides?: PayableOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "deposit(uint256)"(
-      _chainId: BigNumberish,
-      overrides?: PayableOverrides
-    ): Promise<PopulatedTransaction>;
-
-    executeUpgrade(
-      _diamondCut: {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      },
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    "executeUpgrade(tuple)"(
-      _diamondCut: {
-        facetCuts: {
-          facet: string;
-          action: BigNumberish;
-          isFreezable: boolean;
-          selectors: BytesLike[];
-        }[];
-        initAddress: string;
-        initCalldata: BytesLike;
-      },
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    finalizeEthWithdrawal(
-      _chainId: BigNumberish,
-      _l2BlockNumber: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      _message: BytesLike,
-      _merkleProof: BytesLike[],
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    "finalizeEthWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])"(
-      _chainId: BigNumberish,
-      _l2BlockNumber: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      _message: BytesLike,
-      _merkleProof: BytesLike[],
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    freezeDiamond(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    "freezeDiamond()"(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    getChainContract(
+    baseToken(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "getChainContract(uint256)"(
+    "baseToken(uint256)"(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getChainImplementation(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "getChainImplementation()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getChainProxyAdmin(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "getChainProxyAdmin()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getChainStateTransition(
+    baseTokenBridge(
       _chainId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "getChainStateTransition(uint256)"(
+    "baseTokenBridge(uint256)"(
       _chainId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getGovernor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "getGovernor()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    getIsStateTransition(
-      _stateTransition: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "getIsStateTransition(address)"(
-      _stateTransition: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1919,41 +1366,9 @@ export class IBridgehub extends Contract {
 
     "getName()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getPriorityTxMaxGasLimit(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    governor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "getPriorityTxMaxGasLimit()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getTotaStateTransitions(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "getTotaStateTransitions()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getTotalChains(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "getTotalChains()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    isEthWithdrawalFinalized(
-      _chainId: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "isEthWithdrawalFinalized(uint256,uint256,uint256)"(
-      _chainId: BigNumberish,
-      _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    "governor()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     l2TransactionBaseCost(
       _chainId: BigNumberish,
@@ -1974,12 +1389,22 @@ export class IBridgehub extends Contract {
     newChain(
       _chainId: BigNumberish,
       _stateTransition: string,
+      _baseToken: string,
+      _baseTokenBridge: string,
+      _salt: BigNumberish,
+      _governor: string,
+      _initData: BytesLike,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "newChain(uint256,address)"(
+    "newChain(uint256,address,address,address,uint256,address,bytes)"(
       _chainId: BigNumberish,
       _stateTransition: string,
+      _baseToken: string,
+      _baseTokenBridge: string,
+      _salt: BigNumberish,
+      _governor: string,
+      _initData: BytesLike,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
@@ -1993,12 +1418,32 @@ export class IBridgehub extends Contract {
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
+    newToken(
+      _token: string,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "newToken(address)"(
+      _token: string,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    newTokenBridge(
+      _tokenBridge: string,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "newTokenBridge(address)"(
+      _tokenBridge: string,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
     proveL1ToL2TransactionStatus(
       _chainId: BigNumberish,
       _l2TxHash: BytesLike,
-      _l2BlockNumber: BigNumberish,
+      _l2BatchNumber: BigNumberish,
       _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
+      _l2TxNumberInBatch: BigNumberish,
       _merkleProof: BytesLike[],
       _status: BigNumberish,
       overrides?: CallOverrides
@@ -2007,9 +1452,9 @@ export class IBridgehub extends Contract {
     "proveL1ToL2TransactionStatus(uint256,bytes32,uint256,uint256,uint16,bytes32[],uint8)"(
       _chainId: BigNumberish,
       _l2TxHash: BytesLike,
-      _l2BlockNumber: BigNumberish,
+      _l2BatchNumber: BigNumberish,
       _l2MessageIndex: BigNumberish,
-      _l2TxNumberInBlock: BigNumberish,
+      _l2TxNumberInBatch: BigNumberish,
       _merkleProof: BytesLike[],
       _status: BigNumberish,
       overrides?: CallOverrides
@@ -2031,7 +1476,7 @@ export class IBridgehub extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "proveL2LogInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+    "proveL2LogInclusion(uint256,uint256,uint256,(uint8,bool,uint16,address,bytes32,bytes32),bytes32[])"(
       _chainId: BigNumberish,
       _batchNumber: BigNumberish,
       _index: BigNumberish,
@@ -2060,7 +1505,7 @@ export class IBridgehub extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "proveL2MessageInclusion(uint256,uint256,uint256,tuple,bytes32[])"(
+    "proveL2MessageInclusion(uint256,uint256,uint256,(uint16,address,bytes),bytes32[])"(
       _chainId: BigNumberish,
       _batchNumber: BigNumberish,
       _index: BigNumberish,
@@ -2074,77 +1519,89 @@ export class IBridgehub extends Contract {
     ): Promise<PopulatedTransaction>;
 
     requestL2Transaction(
-      _chainId: BigNumberish,
-      _contractL2: string,
-      _l2Value: BigNumberish,
-      _calldata: BytesLike,
-      _l2GasLimit: BigNumberish,
-      _l2GasPerPubdataByteLimit: BigNumberish,
-      _factoryDeps: BytesLike[],
-      _refundRecipient: string,
+      _request: {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      },
       overrides?: PayableOverrides
     ): Promise<PopulatedTransaction>;
 
-    "requestL2Transaction(uint256,address,uint256,bytes,uint256,uint256,bytes[],address)"(
-      _chainId: BigNumberish,
-      _contractL2: string,
-      _l2Value: BigNumberish,
-      _calldata: BytesLike,
-      _l2GasLimit: BigNumberish,
-      _l2GasPerPubdataByteLimit: BigNumberish,
-      _factoryDeps: BytesLike[],
-      _refundRecipient: string,
+    "requestL2Transaction((uint256,address,address,uint256,uint256,bytes,uint256,uint256,bytes[],address))"(
+      _request: {
+        chainId: BigNumberish;
+        payer: string;
+        l2Contract: string;
+        mintValue: BigNumberish;
+        l2Value: BigNumberish;
+        l2Calldata: BytesLike;
+        l2GasLimit: BigNumberish;
+        l2GasPerPubdataByteLimit: BigNumberish;
+        factoryDeps: BytesLike[];
+        refundRecipient: string;
+      },
       overrides?: PayableOverrides
     ): Promise<PopulatedTransaction>;
 
-    setPendingAdmin(
-      _newPendingAdmin: string,
+    setWethBridge(
+      _wethBridge: string,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "setPendingAdmin(address)"(
-      _newPendingAdmin: string,
+    "setWethBridge(address)"(
+      _wethBridge: string,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    setPendingGovernor(
-      _newPendingGovernor: string,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    "setPendingGovernor(address)"(
-      _newPendingGovernor: string,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    setStateTransitionChainContract(
+    stateTransition(
       _chainId: BigNumberish,
-      _stateTransitionChainContract: string,
-      overrides?: Overrides
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "setStateTransitionChainContract(uint256,address)"(
+    "stateTransition(uint256)"(
       _chainId: BigNumberish,
-      _stateTransitionChainContract: string,
-      overrides?: Overrides
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    unfreezeDiamond(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    "unfreezeDiamond()"(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    withdrawFunds(
-      _chainId: BigNumberish,
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides
+    stateTransitionIsRegistered(
+      _stateTransition: string,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "withdrawFunds(uint256,address,uint256)"(
-      _chainId: BigNumberish,
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides
+    "stateTransitionIsRegistered(address)"(
+      _stateTransition: string,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    tokenBridgeIsRegistered(
+      _baseTokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "tokenBridgeIsRegistered(address)"(
+      _baseTokenBridge: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    tokenIsRegistered(
+      _baseToken: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "tokenIsRegistered(address)"(
+      _baseToken: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    wethBridge(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "wethBridge()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

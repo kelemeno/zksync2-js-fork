@@ -22,4 +22,5 @@ export {INonceHolderFactory} from './INonceHolderFactory';
 export type {INonceHolder} from './INonceHolder';
 export {IZkSyncFactory} from './IZkSyncFactory';
 export type {IZkSync} from './IZkSync';
-
+export {ITestnetERC20TokenFactory} from './ITestnetERC20TokenFactory';
+export type {ITestnetERC20Token} from './ITestnetERC20Token';
