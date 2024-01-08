@@ -6,6 +6,8 @@ import {
     IBridgehubFactory,
     INonceHolderFactory,
     IBridgehub,
+    IZkSyncFactory,
+    IZkSync
 } from "../typechain";
 import { Provider } from "./provider";
 import {
@@ -24,6 +26,7 @@ import {
     estimateCustomBridgeDepositL2Gas,
     estimateDefaultBridgeDepositL2Gas,
     ETH_ADDRESS,
+    ETH_ADDRESS_IN_CONTRACTS,
     getERC20DefaultBridgeData,
     isETH,
     L1_MESSENGER_ADDRESS,
@@ -60,6 +63,11 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
         async getBridgehubContract(): Promise<IBridgehub> {
             const address = await this._providerL2().getBridgehubContractAddress();
             return IBridgehubFactory.connect(address, this._signerL1());
+        }
+
+        async getMainContract(): Promise<IZkSync> {
+            const address = await this._providerL2().getMainContractAddress();
+            return IZkSyncFactory.connect(address, this._signerL1());
         }
 
         async getL1BridgeContracts() {
@@ -182,6 +190,7 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
             operatorTip?: BigNumberish;
             bridgeAddress?: Address;
             approveERC20?: boolean;
+            approveBaseERC20?: boolean;
             l2GasLimit?: BigNumberish;
             gasPerPubdataByte?: BigNumberish;
             refundRecipient?: Address;
@@ -190,8 +199,13 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
             customBridgeData?: BytesLike;
         }): Promise<PriorityOpResponse> {
             const depositTx = await this.getDepositTx(transaction);
+            const bridgehub = await this.getBridgehubContract();
+            const chainId = (await this._providerL2().getNetwork()).chainId;
+            const baseTokenAddress = await bridgehub.baseToken(chainId);
+            const baseTokenBridge = await bridgehub.baseTokenBridge(chainId);
+            const bridgeContracts = await this.getL1BridgeContracts();
 
-            if (transaction.token == ETH_ADDRESS) {
+            if ((transaction.token == ETH_ADDRESS) && (baseTokenAddress == ETH_ADDRESS_IN_CONTRACTS)) {
                 const baseGasLimit = await this.estimateGasRequestExecute(depositTx);
                 const gasLimit = scaleGasLimit(baseGasLimit);
 
@@ -199,8 +213,7 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
                 depositTx.overrides.gasLimit ??= gasLimit;
 
                 return this.requestExecute(depositTx);
-            } else {
-                const bridgeContracts = await this.getL1BridgeContracts();
+            } else if (baseTokenAddress == ETH_ADDRESS_IN_CONTRACTS) {
                 if (transaction.approveERC20) {
                     let l2WethToken = ethers.constants.AddressZero;
                     try {
@@ -230,6 +243,114 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
                     }
                 }
 
+                const baseGasLimit = await this._providerL1().estimateGas(depositTx);
+                const gasLimit = scaleGasLimit(baseGasLimit);
+
+                depositTx.gasLimit ??= gasLimit;
+
+                return await this._providerL2().getPriorityOpResponse(
+                    await this._signerL1().sendTransaction(depositTx),
+                );
+            } else if (transaction.token == ETH_ADDRESS) {
+                const mintValue = parseInt(depositTx.data.slice(2+8+3*64, 2+8+4*64), 16);
+                // we are depositing eth into a non-eth based chain. We go through the weth bridge. 
+                if (transaction.approveBaseERC20) {
+                    // We only request the allowance if the current one is not enough.
+                    const allowance = await this.getAllowanceL1(baseTokenAddress, baseTokenBridge);
+                    if (allowance.lt(mintValue)) {
+                        const approveTx = await this.approveERC20(
+                            baseTokenAddress,
+                            mintValue,
+                            {
+                                bridgeAddress: baseTokenBridge,
+                                ...transaction.approveOverrides,
+                            },
+                        );
+                        await approveTx.wait();
+                    }
+                }
+                
+                const baseGasLimit = await this._providerL1().estimateGas(depositTx);
+                const gasLimit = scaleGasLimit(baseGasLimit);
+
+                depositTx.gasLimit ??= gasLimit;
+
+                return await this._providerL2().getPriorityOpResponse(
+                    await this._signerL1().sendTransaction(depositTx),
+                );
+
+            } else if (transaction.token == baseTokenAddress) {
+                const mintValue = depositTx.mintValue;
+                // we are bridging the base token to a non-eth based chain. We go through the bridgehub, and give approval
+                if ((transaction.approveERC20) || (transaction.approveBaseERC20)) {
+                    // We only request the allowance if the current one is not enough.
+                    const allowance = await this.getAllowanceL1(baseTokenAddress, baseTokenBridge);
+                    if (allowance.lt(mintValue)) {
+                        const approveTx = await this.approveERC20(
+                            baseTokenAddress,
+                            mintValue,
+                            {
+                                bridgeAddress: baseTokenBridge,
+                                ...transaction.approveOverrides,
+                            },
+                        );
+                        await approveTx.wait();
+                    }
+                }
+                const baseGasLimit = await this.estimateGasRequestExecute(depositTx);
+                const gasLimit = scaleGasLimit(baseGasLimit);
+
+                depositTx.overrides ??= {};
+                depositTx.overrides.gasLimit ??= gasLimit;
+
+                return this.requestExecute(depositTx);
+            } else {
+                const mintValue = parseInt(depositTx.data.slice(2+8+3*64, 2+8+4*64), 16);
+                // we are depositing a non-eth and non-base token to a non-eth based chain. We go through the bridgehub, and give approval for both tokens
+                if (transaction.approveERC20) {
+                    let l2WethToken = ethers.constants.AddressZero;
+                    try {
+                        l2WethToken = await bridgeContracts.weth.l2TokenAddress(transaction.token);
+                    } catch (e) {}
+                    // If the token is Wrapped Ether, use its bridge.
+                    const proposedBridge =
+                        l2WethToken != ethers.constants.AddressZero
+                            ? bridgeContracts.weth.address
+                            : bridgeContracts.erc20.address;
+                    const bridgeAddress = transaction.bridgeAddress
+                        ? transaction.bridgeAddress
+                        : proposedBridge;
+
+                    // We only request the allowance if the current one is not enough.
+                    const allowance = await this.getAllowanceL1(transaction.token, bridgeAddress);
+                    if (allowance.lt(transaction.amount)) {
+                        const approveTx = await this.approveERC20(
+                            transaction.token,
+                            transaction.amount,
+                            {
+                                bridgeAddress,
+                                ...transaction.approveOverrides,
+                            },
+                        );
+                        await approveTx.wait();
+                    }
+                }
+                if (transaction.approveBaseERC20) {
+                    // We only request the allowance if the current one is not enough.
+                    const allowance = await this.getAllowanceL1(baseTokenAddress, baseTokenBridge);
+                    if (allowance.lt(mintValue)) {
+                        const approveTx = await this.approveERC20(
+                            baseTokenAddress,
+                            mintValue,
+                            {
+                                bridgeAddress: baseTokenBridge,
+                                ...transaction.approveOverrides,
+                            },
+                        );
+                        await approveTx.wait();
+                    }
+                }
+                
                 const baseGasLimit = await this._providerL1().estimateGas(depositTx);
                 const gasLimit = scaleGasLimit(baseGasLimit);
 
@@ -323,41 +444,48 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
             const gasPriceForEstimation = overrides.maxFeePerGas || overrides.gasPrice;
 
             const bridgehub = await this.getBridgehubContract();
+            const chainId = (await this._providerL2().getNetwork()).chainId;
+            const baseTokenAddress = await bridgehub.baseToken(chainId);
 
             const baseCost = await bridgehub.l2TransactionBaseCost(
-                (await this._providerL2().getNetwork()).chainId,
+                chainId,
                 await gasPriceForEstimation,
                 tx.l2GasLimit,
                 tx.gasPerPubdataByte,
             );
-
-            if (token == ETH_ADDRESS) {
+            
+            if ((token == ETH_ADDRESS) && (baseTokenAddress == ETH_ADDRESS_IN_CONTRACTS)) {
+                // we are depositing Eth to an Eth based chain
                 overrides.value ??= baseCost.add(operatorTip).add(amount);
 
                 return {
                     contractAddress: to,
                     calldata: "0x",
+                    mintValue: overrides.value,
                     l2Value: amount,
                     // For some reason typescript can not deduce that we've already set the
                     // tx.l2GasLimit
                     l2GasLimit: tx.l2GasLimit!,
                     ...tx,
                 };
-            } else {
+            } else if (baseTokenAddress == ETH_ADDRESS_IN_CONTRACTS) {
+                // we are depositing some token to an Eth based chain
+                overrides.value ??= baseCost.add(operatorTip);
+                await checkBaseCost(baseCost, overrides.value);
+
                 let refundRecipient = tx.refundRecipient ?? ethers.constants.AddressZero;
-                const args: [BigNumberish, Address, Address, BigNumberish, BigNumberish, BigNumberish, Address] = [
+                const args: [BigNumberish, Address, Address, BigNumberish, BigNumberish, BigNumberish, BigNumberish, Address] = [
                     (await this._providerL2().getNetwork()).chainId,
                     to,
                     token,
+                    await overrides.value,
                     amount,
                     tx.l2GasLimit,
                     tx.gasPerPubdataByte,
                     refundRecipient,
                 ];
 
-                overrides.value ??= baseCost.add(operatorTip);
-                await checkBaseCost(baseCost, overrides.value);
-
+                // check if we're depositing weth
                 let l2WethToken = ethers.constants.AddressZero;
                 try {
                     l2WethToken = await bridgeContracts.weth.l2TokenAddress(tx.token);
@@ -368,6 +496,152 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
                         ? bridgeContracts.weth
                         : bridgeContracts.erc20;
                 return await bridge.populateTransaction.deposit(...args, overrides);
+            } else if (token == ETH_ADDRESS) {
+                // we are depositing eth into a non-eth based chain. We go through the weth bridge. 
+                overrides.value ??= amount;
+                await checkBaseCost(baseCost, baseCost.add(operatorTip)); // this is base token, not eth
+
+                let refundRecipient = tx.refundRecipient ?? ethers.constants.AddressZero;
+                const args: [BigNumberish, Address, Address, BigNumberish, BigNumberish, BigNumberish, BigNumberish, Address] = [
+                    (await this._providerL2().getNetwork()).chainId,
+                    to,
+                    ETH_ADDRESS_IN_CONTRACTS,
+                    baseCost.add(operatorTip), // of the base token, not eth
+                    0, // amount of weth deposited is 0, eth is in msg.value
+                    tx.l2GasLimit,
+                    tx.gasPerPubdataByte,
+                    refundRecipient,
+                ];
+
+                return await bridgeContracts.weth.populateTransaction.deposit(...args, overrides);
+            } else if (token == baseTokenAddress){
+                overrides.value ??= 0;
+                // we are bridging the base token to a non-eth based chain. We go through the bridgehub
+                return {
+                    contractAddress: to,
+                    calldata: "0x",
+                    mintValue: baseCost.add(operatorTip).add(amount),
+                    l2Value: amount,
+                    // For some reason typescript can not deduce that we've already set the
+                    // tx.l2GasLimit
+                    l2GasLimit: tx.l2GasLimit!,
+                    ...tx,
+                };
+            } else {
+                // we are bridging not eth and not the base token to a non-eth based chain
+                let mintValue = baseCost.add(operatorTip);
+                await checkBaseCost(baseCost, mintValue);
+                overrides.value ??= 0;
+
+                let refundRecipient = tx.refundRecipient ?? ethers.constants.AddressZero;
+                const args: [BigNumberish, Address, Address, BigNumberish, BigNumberish, BigNumberish, BigNumberish, Address] = [
+                    (await this._providerL2().getNetwork()).chainId,
+                    to,
+                    token,
+                    mintValue,
+                    amount,
+                    tx.l2GasLimit,
+                    tx.gasPerPubdataByte,
+                    refundRecipient,
+                ];
+
+                // check if we're depositing weth
+                let l2WethToken = ethers.constants.AddressZero;
+                try {
+                    l2WethToken = await bridgeContracts.weth.l2TokenAddress(tx.token);
+                } catch (e) {}
+
+                const bridge =
+                    l2WethToken != ethers.constants.AddressZero
+                        ? bridgeContracts.weth
+                        : bridgeContracts.erc20;
+                return await bridge.populateTransaction.deposit(...args, overrides);
+            }
+        }
+
+        async getMintValue(transaction: {
+            token: Address;
+            amount: BigNumberish;
+            to?: Address;
+            operatorTip?: BigNumberish;
+            bridgeAddress?: Address;
+            l2GasLimit?: BigNumberish;
+            gasPerPubdataByte?: BigNumberish;
+            customBridgeData?: BytesLike;
+            refundRecipient?: Address;
+            overrides?: ethers.PayableOverrides;
+        }): Promise<any> {
+            const bridgeContracts = await this.getL1BridgeContracts();
+            if (transaction.bridgeAddress != null) {
+                bridgeContracts.erc20 = bridgeContracts.erc20.attach(transaction.bridgeAddress);
+            }
+
+            const { ...tx } = transaction;
+            tx.to ??= await this.getAddress();
+            tx.operatorTip ??= BigNumber.from(0);
+            tx.overrides ??= {};
+            tx.gasPerPubdataByte ??= REQUIRED_L1_TO_L2_GAS_PER_PUBDATA_LIMIT;
+            if (tx.bridgeAddress != null) {
+                const customBridgeData =
+                    tx.customBridgeData ?? bridgeContracts.weth.address == tx.bridgeAddress
+                        ? "0x"
+                        : await getERC20DefaultBridgeData(tx.token, this._providerL1());
+                const bridge = IL1BridgeFactory.connect(tx.bridgeAddress, this._signerL1());
+                const l2Address = await bridge.l2Bridge();
+                tx.l2GasLimit ??= await estimateCustomBridgeDepositL2Gas(
+                    this._providerL2(),
+                    tx.bridgeAddress,
+                    l2Address,
+                    tx.token,
+                    tx.amount,
+                    tx.to,
+                    customBridgeData,
+                    await this.getAddress(),
+                    tx.gasPerPubdataByte,
+                );
+            } else {
+                tx.l2GasLimit ??= await estimateDefaultBridgeDepositL2Gas(
+                    this._providerL1(),
+                    this._providerL2(),
+                    tx.token,
+                    tx.amount,
+                    tx.to,
+                    await this.getAddress(),
+                    tx.gasPerPubdataByte,
+                );
+            }
+
+            const { to, token, amount, operatorTip, overrides } = tx;
+
+            await insertGasPrice(this._providerL1(), overrides);
+            const gasPriceForEstimation = overrides.maxFeePerGas || overrides.gasPrice;
+
+            const bridgehub = await this.getBridgehubContract();
+            const chainId = (await this._providerL2().getNetwork()).chainId;
+            const baseTokenAddress = await bridgehub.baseToken(chainId);
+
+            const baseCost = await bridgehub.l2TransactionBaseCost(
+                chainId,
+                await gasPriceForEstimation,
+                tx.l2GasLimit,
+                tx.gasPerPubdataByte,
+            );
+            
+            if ((token == ETH_ADDRESS) && (baseTokenAddress == ETH_ADDRESS_IN_CONTRACTS)) {
+                // we are depositing Eth to an Eth based chain
+                return baseCost.add(operatorTip).add(amount);
+            } else if (baseTokenAddress == ETH_ADDRESS_IN_CONTRACTS) {
+                // we are depositing some token to an Eth based chain
+                return baseCost.add(operatorTip);
+            } else if (token == ETH_ADDRESS) {
+                // we are depositing eth into a non-eth based chain. We go through the weth bridge. 
+                return baseCost.add(operatorTip);
+            } else if (token == baseTokenAddress){
+                // we are bridging the base token to a non-eth based chain. We go through the bridgehub
+                return  baseCost.add(operatorTip).add(amount);
+            } else {
+                // we are bridging not eth and not the base token to a non-eth based chain
+                return baseCost.add(operatorTip);
             }
         }
 
@@ -594,8 +868,9 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
 
                 const contractAddress = await this._providerL2().getBridgehubContractAddress();
                 const bridgehub = IBridgehubFactory.connect(contractAddress, this._signerL1());
+                const wethBridge = IL1BridgeFactory.connect(await bridgehub.wethBridge(), this._signerL1());
 
-                return await bridgehub.finalizeEthWithdrawal(
+                return await wethBridge.finalizeWithdrawal(
                     (await this._providerL2().getNetwork()).chainId,
                     l1BatchNumber,
                     l2MessageIndex,
@@ -720,7 +995,9 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
         async getRequestExecuteTx(transaction: {
             contractAddress: Address;
             calldata: BytesLike;
+            payer?: Address;
             l2GasLimit?: BigNumberish;
+            mintValue?: BigNumberish;
             l2Value?: BigNumberish;
             factoryDeps?: ethers.BytesLike[];
             operatorTip?: BigNumberish;
@@ -729,9 +1006,13 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
             overrides?: ethers.PayableOverrides;
         }): Promise<ethers.PopulatedTransaction> {
             const bridgehub = await this.getBridgehubContract();
+            const chainId = (await this._providerL2().getNetwork()).chainId;
+            const ethIsBaseToken = (await bridgehub.baseToken(chainId) == ETH_ADDRESS_IN_CONTRACTS);
 
             const { ...tx } = transaction;
+            tx.payer ??= await this.getAddress();
             tx.l2Value ??= BigNumber.from(0);
+            tx.mintValue ??= BigNumber.from(0);
             tx.operatorTip ??= BigNumber.from(0);
             tx.factoryDeps ??= [];
             tx.overrides ??= {};
@@ -741,6 +1022,8 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
 
             const {
                 contractAddress,
+                payer,
+                mintValue,
                 l2Value,
                 calldata,
                 l2GasLimit,
@@ -762,17 +1045,19 @@ export function AdapterL1<TBase extends Constructor<TxSender>>(Base: TBase) {
 
             overrides.value ??= baseCost.add(operatorTip).add(l2Value);
 
-            await checkBaseCost(baseCost, overrides.value);
+            await checkBaseCost(baseCost, ethIsBaseToken? overrides.value : mintValue);
 
-            return await bridgehub.populateTransaction.requestL2Transaction(
-                (await this._providerL2().getNetwork()).chainId,
-                contractAddress,
+            return await bridgehub.populateTransaction.requestL2Transaction({
+                chainId,
+                payer: payer,
+                l2Contract: contractAddress,
+                mintValue: mintValue,
                 l2Value,
-                calldata,
+                l2Calldata: calldata,
                 l2GasLimit,
-                REQUIRED_L1_TO_L2_GAS_PER_PUBDATA_LIMIT,
+                l2GasPerPubdataByteLimit: REQUIRED_L1_TO_L2_GAS_PER_PUBDATA_LIMIT,
                 factoryDeps,
-                refundRecipient,
+                refundRecipient},
                 overrides,
             );
         }
