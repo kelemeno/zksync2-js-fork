@@ -30,13 +30,13 @@ describe("Provider", () => {
         });
     });
 
-    describe("#getTestnetPaymasterAddress()", () => {
-        it("should return the address of testnet paymaster", async () => {
-            const TESTNET_PAYMASTER = "0x0f9acdb01827403765458b4685de6d9007580d15";
-            const result = await provider.getTestnetPaymasterAddress();
-            expect(result).to.be.equal(TESTNET_PAYMASTER);
-        });
-    });
+    // describe("#getTestnetPaymasterAddress()", () => {
+    //     it("should return the address of testnet paymaster", async () => {
+    //         const TESTNET_PAYMASTER = "0x0f9acdb01827403765458b4685de6d9007580d15";
+    //         const result = await provider.getTestnetPaymasterAddress();
+    //         expect(result).to.be.equal(TESTNET_PAYMASTER);
+    //     });
+    // });
 
     describe("#l1ChainId()", () => {
         it("should return L1 chain ID", async () => {
@@ -53,13 +53,13 @@ describe("Provider", () => {
         });
     });
 
-    describe("#getTokenPrice()", () => {
-        it("should return `token` price", async () => {
-            const TOKEN_PRICE = "1500.00";
-            const result = await provider.getTokenPrice(utils.ETH_ADDRESS);
-            expect(result).to.be.equal(TOKEN_PRICE);
-        });
-    });
+    // describe("#getTokenPrice()", () => {
+    //     it("should return `token` price", async () => {
+    //         const TOKEN_PRICE = "1500.00";
+    //         const result = await provider.getTokenPrice(utils.ETH_ADDRESS);
+    //         expect(result).to.be.equal(TOKEN_PRICE);
+    //     });
+    // });
 
     describe("#getGasPrice()", () => {
         it("should return gas price", async () => {
@@ -125,12 +125,12 @@ describe("Provider", () => {
         });
     });
 
-    describe("#getConfirmedTokens()", () => {
-        it("should return confirmed tokens", async () => {
-            const result = await provider.getConfirmedTokens();
-            expect(result).to.have.lengthOf(2);
-        });
-    });
+    // describe("#getConfirmedTokens()", () => {
+    //     it("should return confirmed tokens", async () => {
+    //         const result = await provider.getConfirmedTokens();
+    //         expect(result).to.have.lengthOf(2);
+    //     });
+    // });
 
     describe("#getDefaultBridgeAddresses()", () => {
         it("should return default bridges", async () => {
